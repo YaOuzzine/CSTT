@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../components/ui/card";
+import { Alert, AlertDescription } from "../../../../../../components/ui/alert";
 import { 
   Bug,
   AlertTriangle,

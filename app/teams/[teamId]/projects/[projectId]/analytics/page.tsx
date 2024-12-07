@@ -2,10 +2,10 @@
 'use client'
 
 import { Suspense } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../components/ui/card"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { BarChart3, Bug, Scaling, Clock } from 'lucide-react'
-import { GradientBackground } from '../components/ui/gradient-background'
+import { GradientBackground } from '../../../../../components/ui/gradient-background'
 
 // Types
 interface MetricType {

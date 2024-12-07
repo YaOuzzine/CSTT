@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../../../components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../../../../components/ui/tabs";
 import { AlertCircle, Code, FileText, Image as ImageIcon, Loader2 } from "lucide-react";
-import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Alert, AlertDescription } from "../../../../../../../../components/ui/alert";
 
 const TestCaseGenerator = () => {
   const [generateLoading, setGenerateLoading] = useState(false);

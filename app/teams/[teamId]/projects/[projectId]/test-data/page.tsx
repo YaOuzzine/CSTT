@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Alert, AlertDescription } from "../components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../components/ui/tabs";
+import { Alert, AlertDescription } from "../../../../../components/ui/alert";
 import { Database, FileJson, FileText, Table, AlertCircle, Loader2, Plus } from 'lucide-react';
 import Link from 'next/link';
 
