@@ -1,0 +1,93 @@
+.
+├── app/
+│   ├── auth/
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   ├── register/
+│   │   │   └── page.tsx
+│   │   └── AuthWrapper.tsx
+│   ├── profile/  # Personal user settings
+│   │   ├── page.tsx (Profile Overview)
+│   │   ├── settings/
+│   │   │   ├── page.tsx (General Settings)
+│   │   │   ├── security/
+│   │   │   │   └── page.tsx (Password, 2FA)
+│   │   │   ├── notifications/
+│   │   │   │   └── page.tsx
+│   │   │   └── preferences/
+│   │   │       └── page.tsx
+│   │   └── activity/
+│   │       └── page.tsx (User's activity across teams)
+│   ├── teams/
+│   │   ├── page.tsx (Teams Overview)
+│   │   ├── create/
+│   │   │   └── page.tsx
+│   │   ├── join/
+│   │   │   └── page.tsx
+│   │   └── [teamId]/
+│   │       ├── page.tsx (Team Dashboard)
+│   │       ├── settings/
+│   │       │   ├── page.tsx (Team Settings Overview)
+│   │       │   ├── members/
+│   │       │   │   └── page.tsx
+│   │       │   ├── roles/
+│   │       │   │   └── page.tsx
+│   │       │   └── integrations/
+│   │       │       └── page.tsx
+│   │       └── projects/
+│   │           ├── page.tsx (Projects List)
+│   │           ├── create/
+│   │           │   └── page.tsx
+│   │           └── [projectId]/
+│   │               ├── page.tsx (Project Dashboard)
+│   │               ├── settings/
+│   │               │   └── page.tsx
+│   │               ├── test-cases/
+│   │               │   ├── page.tsx
+│   │               │   ├── create/
+│   │               │   │   └── page.tsx
+│   │               │   └── [testCaseId]/
+│   │               │       ├── page.tsx
+│   │               │       └── edit/
+│   │               │           └── page.tsx
+│   │               ├── test-data/
+│   │               │   ├── page.tsx
+│   │               │   ├── create/
+│   │               │   │   └── page.tsx
+│   │               │   ├── templates/
+│   │               │   │   ├── page.tsx
+│   │               │   │   └── create/
+│   │               │   │       └── page.tsx
+│   │               │   └── [dataSetId]/
+│   │               │       └── page.tsx
+│   │               ├── defects/
+│   │               │   ├── page.tsx
+│   │               │   ├── create/
+│   │               │   │   └── page.tsx
+│   │               │   └── [defectId]/
+│   │               │       ├── page.tsx
+│   │               │       └── edit/
+│   │               │           └── page.tsx
+│   │               └── analytics/
+│   │                   ├── page.tsx
+│   │                   ├── test-coverage/
+│   │                   │   └── page.tsx
+│   │                   └── defect-trends/
+│   │                       └── page.tsx
+│   ├── components/
+│   │   ├── layouts/
+│   │   │   ├── RootLayout.tsx
+│   │   │   ├── AuthLayout.tsx
+│   │   │   ├── DashboardLayout.tsx
+│   │   │   ├── TeamLayout.tsx
+│   │   │   └── ProjectLayout.tsx
+│   │   ├── shared/
+│   │   │   ├── TeamSwitcher.tsx
+│   │   │   ├── ProjectSelector.tsx
+│   │   │   ├── UserMenu.tsx
+│   │   │   └── Navigation/
+│   │   └── ui/
+│   ├── hooks/
+│   ├── lib/
+│   ├── styles/
+│   └── types/

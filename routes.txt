@@ -1,0 +1,51 @@
+# Authentication
+/auth/login
+/auth/register
+
+# User Profile & Settings
+/profile
+/profile/settings
+/profile/settings/security
+/profile/settings/notifications
+/profile/settings/preferences
+/profile/activity
+
+# Teams
+/teams
+/teams/create
+/teams/join
+/teams/[teamId]
+/teams/[teamId]/settings
+/teams/[teamId]/settings/members
+/teams/[teamId]/settings/roles
+/teams/[teamId]/settings/integrations
+
+# Projects
+/teams/[teamId]/projects
+/teams/[teamId]/projects/create
+/teams/[teamId]/projects/[projectId]
+/teams/[teamId]/projects/[projectId]/settings
+
+# Test Cases
+/teams/[teamId]/projects/[projectId]/test-cases
+/teams/[teamId]/projects/[projectId]/test-cases/create
+/teams/[teamId]/projects/[projectId]/test-cases/[testCaseId]
+/teams/[teamId]/projects/[projectId]/test-cases/[testCaseId]/edit
+
+# Test Data
+/teams/[teamId]/projects/[projectId]/test-data
+/teams/[teamId]/projects/[projectId]/test-data/create
+/teams/[teamId]/projects/[projectId]/test-data/templates
+/teams/[teamId]/projects/[projectId]/test-data/templates/create
+/teams/[teamId]/projects/[projectId]/test-data/[dataSetId]
+
+# Defects
+/teams/[teamId]/projects/[projectId]/defects
+/teams/[teamId]/projects/[projectId]/defects/create
+/teams/[teamId]/projects/[projectId]/defects/[defectId]
+/teams/[teamId]/projects/[projectId]/defects/[defectId]/edit
+
+# Analytics
+/teams/[teamId]/projects/[projectId]/analytics
+/teams/[teamId]/projects/[projectId]/analytics/test-coverage
+/teams/[teamId]/projects/[projectId]/analytics/defect-trends
