@@ -35,7 +35,7 @@ export default function TestSuitePage({ params }: { params: { teamId: string; pr
   );
 
   const handleNavigation = (testSuiteId) => {
-    router.push(`/teams/${teamId}/projects/${projectId}/test-suites/${testSuiteId}/test-cases`);
+    router.push(`/teams/${teamId}/projects/${projectId}/test-suites/${testSuiteId}/`);
   };
 
   return (

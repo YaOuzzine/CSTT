@@ -55,7 +55,7 @@ const quickActions = [
   {
     id: "create-test",
     title: "Create Test Case",
-    href: "test-suite",
+    href: "test-suites",
     icon: Plus,
     color: "bg-blue-500",
   },

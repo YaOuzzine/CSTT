@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../../../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../../../../components/ui/tabs";
 import { Alert, AlertDescription } from "../../../../../../../../components/ui/alert";
-import SavedNotification from "../../../../../../../../components/SavedNotification";
 import { AlertCircle, Code, FileText, Image as ImageIcon, Loader2, Upload, X } from "lucide-react";
 import api from "../../../../../../../../lib/api";
 
@@ -22,7 +21,6 @@ const TestCaseGenerator = ({ params }: { params: { teamId: string; projectId: st
   const [projectDescription, setProjectDescription] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
-  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
   // Fetch project description when component mounts
   useEffect(() => {
@@ -90,9 +88,6 @@ const TestCaseGenerator = ({ params }: { params: { teamId: string; projectId: st
             .map(step => step.trim()),
           expected_results: response.data.expected_results,
           type: type,
-          generation_query: response.data.generation_query,
-          input_image_data: inputType === 'image' ? imagePreview : null,
-          input_image_type: selectedImage?.type || null
         };
         setGeneratedTestCases([testCase]);
       }
@@ -124,9 +119,6 @@ const TestCaseGenerator = ({ params }: { params: { teamId: string; projectId: st
               generated: true,
               source_type: inputType,
             },
-            generation_query: testCase.generation_query,
-            input_image_data: testCase.input_image_data,
-            input_image_type: testCase.input_image_type    
           });
     
           const testCaseId = testCaseResponse.data.test_case.id; // Extract test case ID from the response
@@ -148,7 +140,7 @@ const TestCaseGenerator = ({ params }: { params: { teamId: string; projectId: st
         });
     
         const results = await Promise.all(promises);
-        setShowSaveSuccess(true);
+        alert("Test cases and steps saved successfully!");
       } catch (err) {
         console.error(err);
         setError(err.response?.data?.detail || "Failed to save test cases. Please try again.");
@@ -332,11 +324,6 @@ const TestCaseGenerator = ({ params }: { params: { teamId: string; projectId: st
           </Card>
         )}
       </div>
-      <SavedNotification 
-        show={showSaveSuccess} 
-        onClose={() => setShowSaveSuccess(false)} 
-        message="Test case saved successfully!"
-      />
     </div>
   );
 };

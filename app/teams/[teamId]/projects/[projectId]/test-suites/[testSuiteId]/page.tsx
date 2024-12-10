@@ -7,7 +7,7 @@ import { Search, Plus, Filter, MoreVertical, CheckCircle2, XCircle, Clock, Alert
 import Link from "next/link";
 import api from "../../../../../../lib/api";
 
-export default function TestSuitePage({ params }: { params: { teamId: string; projectId: string; testSuiteId: string } }) {
+function TestSuitePage({ params }: { params: { teamId: string; projectId: string; testSuiteId: string } }) {
   const { teamId, projectId, testSuiteId } = params;
   const [testCases, setTestCases] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,7 +71,7 @@ export default function TestSuitePage({ params }: { params: { teamId: string; pr
             <p className="text-gray-500 dark:text-gray-400">Manage and monitor your test suite</p>
           </div>
           <Link
-            href={`/teams/${teamId}/projects/${projectId}/test-suite/${testSuiteId}/test-cases/create`}
+            href={`/teams/${teamId}/projects/${projectId}/test-suites/${testSuiteId}/test-cases/create`}
             className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
           >
             <Plus className="h-5 w-5 mr-2" />
@@ -107,6 +107,10 @@ export default function TestSuitePage({ params }: { params: { teamId: string; pr
             <p>Loading test cases...</p>
           ) : filteredTestCases.length > 0 ? (
             filteredTestCases.map((testCase) => (
+              <Link
+  href={`/teams/${teamId}/projects/${projectId}/test-suites/${testSuiteId}/test-cases/${testCase.id}`}
+  className="block group"
+>
               <Card
                 key={testCase.id}
                 className="group hover:scale-102 transition-all duration-200 backdrop-blur-sm bg-white/50 dark:bg-gray-900/50 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl"
@@ -151,6 +155,7 @@ export default function TestSuitePage({ params }: { params: { teamId: string; pr
                   </div>
                 </CardContent>
               </Card>
+              </Link>
             ))
           ) : (
             <p className="text-gray-500 dark:text-gray-400">No test cases found for this test suite.</p>
@@ -160,3 +165,5 @@ export default function TestSuitePage({ params }: { params: { teamId: string; pr
     </div>
   );
 }
+
+export default TestSuitePage;

@@ -1,82 +1,83 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../components/ui/tabs";
 import { Alert, AlertDescription } from "../../../../../components/ui/alert";
-import { Database, FileJson, FileText, Table, AlertCircle, Loader2, Plus } from 'lucide-react';
+import { 
+  Database, FileJson, FileText, Table, AlertCircle, 
+  Loader2, Plus, Download, Calendar, Clock, CheckCircle2 
+} from 'lucide-react';
 import Link from 'next/link';
+import api from '../../../../../lib/api';
+import getFormattedData from '@/app/utils/getFormattedData';
+import { formatDistanceToNow } from 'date-fns';
 
-// Mock data for available templates
-const dataTemplates = [
-  {
-    id: 1,
-    name: "E-commerce Data",
-    description: "Product catalog, user profiles, and order data",
-    fields: ["product_id", "name", "price", "category", "user_id", "order_date"],
-    format: "JSON"
-  },
-  {
-    id: 2,
-    name: "Banking Transactions",
-    description: "Account transactions and customer data",
-    fields: ["account_id", "transaction_type", "amount", "timestamp"],
-    format: "CSV"
-  },
-  {
-    id: 3,
-    name: "User Profiles",
-    description: "Personal information and user preferences",
-    fields: ["user_id", "name", "email", "address", "preferences"],
-    format: "SQL"
-  }
-];
+interface TestData {
+  id: string;
+  name: string;
+  description: string;
+  data_template: any; 
+  format_type: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+  test_cases: Array<{
+      id: string;
+      title: string;
+  }>;
+}
 
 const TestDataPage = () => {
   const [selectedFormat, setSelectedFormat] = useState('json');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [generatedData, setGeneratedData] = useState(null);
+  const [testDataList, setTestDataList] = useState<TestData[]>([]);
+  const [selectedData, setSelectedData] = useState<TestData | null>(null);
 
-  const handleGenerateData = async () => {
-    if (!selectedTemplate) {
-      setError('Please select a template first');
-      return;
-    }
+  useEffect(() => {
+    fetchTestData();
+  }, []);
 
-    setLoading(true);
-    setError('');
-
+  const fetchTestData = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock generated data
-      const mockData = {
-        json: [
-          {
-            product_id: "P123",
-            name: "Premium Headphones",
-            price: 199.99,
-            category: "Electronics"
-          },
-          {
-            product_id: "P124",
-            name: "Wireless Mouse",
-            price: 49.99,
-            category: "Accessories"
-          }
-        ]
-      };
-
-      setGeneratedData(mockData);
+      const response = await api.get('/test-data/');
+      setTestDataList(response.data);
+      console.log(response.data)
     } catch (err) {
-      setError('Failed to generate test data. Please try again.');
+      setError('Failed to fetch test data');
     } finally {
       setLoading(false);
     }
   };
+
+  const handleDownload = (data: any, format: string, filename: string) => {
+    if (!data) {
+        console.error('No data available for download');
+        return;
+    }
+
+    const formattedData = getFormattedData(data, format);
+    if (!formattedData) {
+        console.error('Failed to format data');
+        return;
+    }
+
+    const mimeTypes = {
+        json: 'application/json',
+        csv: 'text/csv',
+        sql: 'application/sql'
+    };
+    
+    const blob = new Blob([formattedData], { type: mimeTypes[format] });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}.${format}`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+};
+
+  // Reuse the getFormattedData function from before...
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 transition-colors duration-500">
@@ -89,126 +90,132 @@ const TestDataPage = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Test Data</h1>
-            <p className="text-gray-500 dark:text-gray-400">Generate realistic test data for your applications</p>
+            <p className="text-gray-500 dark:text-gray-400">View and manage your generated test data</p>
           </div>
           
-          <Link href="/test-data/create" className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl">
+          <Link 
+            href="./test-data/create" 
+            className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+          >
             <Plus className="h-5 w-5 mr-2" />
-            New Template
+            Generate New Data
           </Link>
         </div>
 
-        {/* Main Content */}
-        <div className="grid gap-6 md:grid-cols-12">
-          {/* Templates Section */}
-          <div className="md:col-span-8">
-            <Card className="backdrop-blur-sm bg-white/50 dark:bg-gray-900/50 border border-gray-200/50 dark:border-gray-700/50 shadow-xl h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-blue-500" />
-                  Data Templates
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  {dataTemplates.map((template) => (
-                    <div
-                      key={template.id}
-                      onClick={() => setSelectedTemplate(template)}
-                      className={`p-4 rounded-lg border transition-all cursor-pointer
-                        ${selectedTemplate?.id === template.id
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
-                        }`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {template.name}
-                        </h3>
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                          {template.format}
-                        </span>
-                      </div>
-                      <p className="text-gray-600 dark:text-gray-300 mb-3">{template.description}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {template.fields.map((field, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-sm"
-                          >
-                            {field}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {loading ? (
+          <div className="flex items-center justify-center p-12">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
           </div>
-
-          {/* Configuration Section */}
-          <div className="md:col-span-4 space-y-6">
-            <Card className="backdrop-blur-sm bg-white/50 dark:bg-gray-900/50 border border-gray-200/50 dark:border-gray-700/50 shadow-xl">
-              <CardHeader>
-                <CardTitle>Output Format</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs value={selectedFormat} onValueChange={setSelectedFormat}>
-                  <TabsList className="grid grid-cols-3 w-full">
-                    <TabsTrigger value="json" className="flex items-center gap-2">
-                      <FileJson className="h-4 w-4" />
-                      JSON
-                    </TabsTrigger>
-                    <TabsTrigger value="csv" className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      CSV
-                    </TabsTrigger>
-                    <TabsTrigger value="sql" className="flex items-center gap-2">
-                      <Table className="h-4 w-4" />
-                      SQL
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-
-                {error && (
-                  <Alert variant="destructive" className="mt-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-
-                <button
-                  onClick={handleGenerateData}
-                  disabled={loading || !selectedTemplate}
-                  className="w-full mt-4 inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    'Generate Data'
-                  )}
-                </button>
-              </CardContent>
-            </Card>
-
-            {generatedData && (
+        ) : (
+          <div className="grid gap-6 md:grid-cols-12">
+            {/* Test Data List */}
+            <div className="md:col-span-8">
               <Card className="backdrop-blur-sm bg-white/50 dark:bg-gray-900/50 border border-gray-200/50 dark:border-gray-700/50 shadow-xl">
                 <CardHeader>
-                  <CardTitle>Generated Data</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5 text-blue-500" />
+                    Generated Test Data
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-auto max-h-96">
-                    {JSON.stringify(generatedData, null, 2)}
-                  </pre>
+                  <div className="space-y-4">
+                    {testDataList.length === 0 ? (
+                      <div className="text-center py-12 text-gray-500">
+                        No test data available. Generate some data to get started!
+                      </div>
+                    ) : (
+                      testDataList.map((data) => (
+                        <div
+                          key={data.id}
+                          onClick={() => setSelectedData(data)}
+                          className={`p-4 rounded-lg border transition-all cursor-pointer hover:shadow-md
+                            ${selectedData?.id === data.id
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                              : 'border-gray-200 dark:border-gray-700'
+                            }`}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {data.name}
+                              </h3>
+                              <p className="text-sm text-gray-500">{data.description}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-500">
+                                <Clock className="h-4 w-4 inline-block mr-1" />
+                                {formatDistanceToNow(new Date(data.created_at), { addSuffix: true })}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {data.test_cases.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-sm text-gray-500">Linked Test Cases:</p>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {data.test_cases.map(tc => (
+                                  <span
+                                    key={tc.id}
+                                    className="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+                                  >
+                                    {tc.title}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </CardContent>
               </Card>
-            )}
+            </div>
+
+            {/* Preview and Download Section */}
+            <div className="md:col-span-4 space-y-6">
+              {selectedData && (
+                <Card className="backdrop-blur-sm bg-white/50 dark:bg-gray-900/50 border border-gray-200/50 dark:border-gray-700/50 shadow-xl">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Preview</CardTitle>
+                      <select
+                        value={selectedFormat}
+                        onChange={(e) => setSelectedFormat(e.target.value)}
+                        className="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1"
+                      >
+                        <option value="json">JSON</option>
+                        <option value="csv">CSV</option>
+                        <option value="sql">SQL</option>
+                      </select>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mb-4">
+                    <button
+    onClick={() => handleDownload(selectedData.data_template, selectedFormat, selectedData.name)}
+    className="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+>
+    <Download className="h-4 w-4 mr-2" />
+    Download {selectedFormat.toUpperCase()}
+</button>
+                    </div>
+                    <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-auto max-h-96 text-xs">
+    {getFormattedData(selectedData.data_template, selectedFormat)}
+</pre>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

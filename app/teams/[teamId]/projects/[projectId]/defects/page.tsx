@@ -202,7 +202,7 @@ export default function DefectsPage() {
             <p className="text-gray-500 dark:text-gray-400">Track and manage software defects</p>
           </div>
           
-          <Link href="/defects/create" className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl">
+          <Link href="./defects/create" className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl">
             <Plus className="h-5 w-5 mr-2" />
             Report Defect
           </Link>
