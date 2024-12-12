@@ -1,20 +1,27 @@
 'use client'
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../components/ui/card";
+import { useRouter } from 'next/navigation';
+import { Card, CardContent } from "../../../../../../components/ui/card";
 import { Alert, AlertDescription } from "../../../../../../components/ui/alert";
+import api from '../../../../../../lib/api';
 import { 
-  Bug,
-  AlertTriangle,
-  Clock,
-  Save,
-  X,
   AlertCircle,
-  Loader2
+  Loader2,
+  Save,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
 
-const CreateDefect = () => {
+interface CreateDefectProps {
+  params: {
+    teamId: string;
+    projectId: string;
+  };
+}
+
+const CreateDefect: React.FC<CreateDefectProps> = ({ params }) => {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -22,9 +29,9 @@ const CreateDefect = () => {
     description: '',
     priority: 'Medium',
     severity: 'Medium',
-    affectedArea: '',
+    affected_area: '',
     tags: '',
-    stepsToReproduce: ''
+    steps_to_reproduce: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,21 +40,26 @@ const CreateDefect = () => {
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Mock success - in real app, would make API call here
-      console.log('Submitted defect:', formData);
-      
-      // Redirect would happen here after successful creation
-    } catch (err) {
-      setError('Failed to create defect. Please try again.');
+      const response = await api.post(
+        `/teams/${params.teamId}/projects/${params.projectId}/defects/create/`,
+        formData
+      );
+
+      // Redirect to the defects list on success
+      router.push(`/teams/${params.teamId}/projects/${params.projectId}/defects`);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.error || 
+        'Failed to create defect. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -72,7 +84,7 @@ const CreateDefect = () => {
         <Card className="backdrop-blur-sm bg-white/50 dark:bg-gray-900/50 border border-gray-200/50 dark:border-gray-700/50 shadow-xl">
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Title */}
+              {/* Title Field */}
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Title
@@ -89,7 +101,7 @@ const CreateDefect = () => {
                 />
               </div>
 
-              {/* Description */}
+              {/* Description Field */}
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Description
@@ -146,14 +158,14 @@ const CreateDefect = () => {
 
               {/* Affected Area */}
               <div>
-                <label htmlFor="affectedArea" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="affected_area" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Affected Area
                 </label>
                 <input
                   type="text"
-                  id="affectedArea"
-                  name="affectedArea"
-                  value={formData.affectedArea}
+                  id="affected_area"
+                  name="affected_area"
+                  value={formData.affected_area}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-800"
                   placeholder="e.g., Login, Payment Processing, User Profile"
@@ -178,14 +190,14 @@ const CreateDefect = () => {
 
               {/* Steps to Reproduce */}
               <div>
-                <label htmlFor="stepsToReproduce" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="steps_to_reproduce" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Steps to Reproduce
                 </label>
                 <textarea
-                  id="stepsToReproduce"
-                  name="stepsToReproduce"
+                  id="steps_to_reproduce"
+                  name="steps_to_reproduce"
                   rows={4}
-                  value={formData.stepsToReproduce}
+                  value={formData.steps_to_reproduce}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-800"
                   placeholder="List the steps to reproduce this defect"
@@ -202,7 +214,7 @@ const CreateDefect = () => {
               {/* Action Buttons */}
               <div className="flex justify-end space-x-4">
                 <Link
-                  href="/defects"
+                  href={`/teams/${params.teamId}/projects/${params.projectId}/defects`}
                   className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <X className="h-4 w-4 mr-2" />

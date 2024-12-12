@@ -1,10 +1,11 @@
-// app/defects/page.tsx
 'use client'
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../../components/ui/card"
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent } from "../../../../../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../components/ui/tabs"
+import { Alert, AlertDescription } from "../../../../../components/ui/alert"
 import Link from 'next/link'
+import api from '../../../../../lib/api'
 import {
   Search,
   Plus,
@@ -14,11 +15,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   AlertCircle,
-  BarChart2,
-  Tags,
   Calendar,
   User,
-  LucideIcon
+  Loader2,
+  type LucideIcon
 } from 'lucide-react'
 
 // Types
@@ -26,83 +26,45 @@ interface Defect {
   id: string
   title: string
   description: string
-  status: 'Open' | 'In Progress' | 'Fixed' | 'Closed'
-  priority: 'Critical' | 'High' | 'Medium' | 'Low'
-  severity: 'High' | 'Medium' | 'Low'
+  status: string
+  priority: string
+  severity: string
   assignee: string
   reporter: string
-  created: string
-  updated: string
+  created_at: string
+  updated_at: string
   tags: string[]
-  affectedArea: string
+  affected_area: string
 }
 
-interface StatusConfig {
-  [key: string]: {
-    color: string
-    icon: LucideIcon
+interface DefectsPageProps {
+  params: {
+    teamId: string
+    projectId: string
   }
 }
-
-interface PriorityConfig {
-  [key: string]: string
-}
-
-// Mock data for defects
-const mockDefects: Defect[] = [
-  {
-    id: "DEF-001",
-    title: "Login Authentication Failure",
-    description: "Users unable to log in with correct credentials",
-    status: "Open",
-    priority: "Critical",
-    severity: "High",
-    assignee: "John Doe",
-    reporter: "Jane Smith",
-    created: "2024-03-01",
-    updated: "2024-03-02",
-    tags: ["Authentication", "Frontend"],
-    affectedArea: "User Authentication"
-  },
-  {
-    id: "DEF-002",
-    title: "Payment Processing Timeout",
-    description: "Payment transactions timing out after 30 seconds",
-    status: "In Progress",
-    priority: "High",
-    severity: "Medium",
-    assignee: "Alice Johnson",
-    reporter: "Bob Wilson",
-    created: "2024-03-03",
-    updated: "2024-03-04",
-    tags: ["Payment", "Backend"],
-    affectedArea: "Payment Processing"
-  },
-  {
-    id: "DEF-003",
-    title: "Data Export Format Error",
-    description: "CSV export missing column headers",
-    status: "Fixed",
-    priority: "Medium",
-    severity: "Low",
-    assignee: "Charlie Brown",
-    reporter: "Diana Prince",
-    created: "2024-03-05",
-    updated: "2024-03-06",
-    tags: ["Export", "Data"],
-    affectedArea: "Reporting"
-  }
-]
 
 // Status configuration for styling
-const statusConfig: StatusConfig = {
-  'Open': { color: 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20', icon: AlertCircle },
-  'In Progress': { color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20', icon: Clock },
-  'Fixed': { color: 'text-green-500 bg-green-50 dark:bg-green-900/20', icon: CheckCircle2 },
-  'Closed': { color: 'text-gray-500 bg-gray-50 dark:bg-gray-900/20', icon: Bug }
+const statusConfig: Record<string, { color: string, icon: LucideIcon }> = {
+  'Open': { 
+    color: 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20', 
+    icon: AlertCircle 
+  },
+  'In Progress': { 
+    color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20', 
+    icon: Clock 
+  },
+  'Fixed': { 
+    color: 'text-green-500 bg-green-50 dark:bg-green-900/20', 
+    icon: CheckCircle2 
+  },
+  'Closed': { 
+    color: 'text-gray-500 bg-gray-50 dark:bg-gray-900/20', 
+    icon: Bug 
+  }
 }
 
-const priorityConfig: PriorityConfig = {
+const priorityConfig: Record<string, string> = {
   'Critical': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
   'High': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
   'Medium': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
@@ -114,7 +76,9 @@ interface DefectCardProps {
 }
 
 const DefectCard: React.FC<DefectCardProps> = ({ defect }) => {
-  const StatusIcon = statusConfig[defect.status].icon
+  const StatusIcon = statusConfig[defect.status]?.icon || Bug
+  const statusColor = statusConfig[defect.status]?.color || 'text-gray-500 bg-gray-50'
+  const priorityColor = priorityConfig[defect.priority] || 'bg-gray-100 text-gray-800'
   
   return (
     <Card className="hover:shadow-lg transition-shadow duration-200 backdrop-blur-sm bg-white/50 dark:bg-gray-900/50 border border-gray-200/50 dark:border-gray-700/50">
@@ -127,7 +91,7 @@ const DefectCard: React.FC<DefectCardProps> = ({ defect }) => {
                 <span className="text-sm text-gray-500 dark:text-gray-400 font-mono">
                   {defect.id}
                 </span>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityConfig[defect.priority]}`}>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColor}`}>
                   {defect.priority}
                 </span>
               </div>
@@ -135,7 +99,7 @@ const DefectCard: React.FC<DefectCardProps> = ({ defect }) => {
                 {defect.title}
               </h3>
             </div>
-            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm ${statusConfig[defect.status].color}`}>
+            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm ${statusColor}`}>
               <StatusIcon className="h-4 w-4" />
               <span>{defect.status}</span>
             </div>
@@ -150,43 +114,87 @@ const DefectCard: React.FC<DefectCardProps> = ({ defect }) => {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
               <User className="h-4 w-4" />
-              <span>Assignee: {defect.assignee}</span>
+              <span>{defect.assignee || 'Unassigned'}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
               <Calendar className="h-4 w-4" />
-              <span>Updated: {defect.updated}</span>
+              <span>
+                {new Date(defect.updated_at).toLocaleDateString()}
+              </span>
             </div>
           </div>
 
           {/* Tags */}
-          <div className="flex flex-wrap gap-2">
-            {defect.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-sm"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+          {defect.tags && defect.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {defect.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-sm"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
   )
 }
 
-export default function DefectsPage() {
+export default function DefectsPage({ params }: DefectsPageProps) {
+  const [defects, setDefects] = useState<Defect[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedView, setSelectedView] = useState('all')
   const [selectedPriority, setSelectedPriority] = useState('all')
 
-  // Filter defects based on search query and filters
-  const filteredDefects = mockDefects.filter(defect => {
-    const matchesSearch = defect.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         defect.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesPriority = selectedPriority === 'all' || defect.priority.toLowerCase() === selectedPriority
-    return matchesSearch && matchesPriority
-  })
+  useEffect(() => {
+    fetchDefects()
+  }, [selectedView, selectedPriority])
+
+  const fetchDefects = async () => {
+    try {
+      setLoading(true)
+      setError('')
+
+      const queryParams = new URLSearchParams({
+        view: selectedView,
+        ...(selectedPriority !== 'all' && { priority: selectedPriority }),
+        ...(searchQuery && { search: searchQuery })
+      })
+
+      const response = await api.get(
+        `/teams/${params.teamId}/projects/${params.projectId}/defects/?${queryParams}`
+      )
+      setDefects(response.data)
+    } catch (err: any) {
+      console.error('Failed to fetch defects:', err)
+      setError('Failed to load defects. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchDefects()
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  if (error) {
+    return (
+      <Alert variant="destructive" className="m-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 transition-colors duration-500">
@@ -202,7 +210,10 @@ export default function DefectsPage() {
             <p className="text-gray-500 dark:text-gray-400">Track and manage software defects</p>
           </div>
           
-          <Link href="./defects/create" className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl">
+          <Link 
+            href={`/teams/${params.teamId}/projects/${params.projectId}/defects/create`}
+            className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+          >
             <Plus className="h-5 w-5 mr-2" />
             Report Defect
           </Link>
@@ -231,10 +242,10 @@ export default function DefectsPage() {
                 onChange={(e) => setSelectedPriority(e.target.value)}
               >
                 <option value="all">All Priorities</option>
-                <option value="critical">Critical</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
               </select>
 
               {/* View Toggle */}
@@ -249,23 +260,83 @@ export default function DefectsPage() {
         </Card>
 
         {/* Defects Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredDefects.map((defect) => (
-            <Link key={defect.id} href={`/defects/${defect.id}`}>
-              <DefectCard defect={defect} />
-            </Link>
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {filteredDefects.length === 0 && (
-          <div className="text-center py-12">
-            <Bug className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No defects found</h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              Try adjusting your search or filters to find what you're looking for.
-            </p>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <span className="ml-3 text-gray-500 dark:text-gray-400">Loading defects...</span>
           </div>
+        ) : (
+          <>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {defects.map((defect) => (
+                <Link 
+                  key={defect.id} 
+                  href={`/teams/${params.teamId}/projects/${params.projectId}/defects/${defect.id}`}
+                >
+                  <DefectCard defect={defect} />
+                </Link>
+              ))}
+            </div>
+
+            {/* Empty State */}
+            {defects.length === 0 && (
+              <div className="text-center py-12">
+                <Bug className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  No defects found
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {searchQuery 
+                    ? "Try adjusting your search or filters to find what you're looking for."
+                    : "Get started by reporting your first defect."
+                  }
+                </p>
+                {!searchQuery && (
+                  <Link
+                    href={`/teams/${params.teamId}/projects/${params.projectId}/defects/create`}
+                    className="inline-flex items-center justify-center px-4 py-2 mt-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Report Defect
+                  </Link>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Statistics Card */}
+        {defects.length > 0 && (
+          <Card className="backdrop-blur-sm bg-white/50 dark:bg-gray-900/50 border border-gray-200/50 dark:border-gray-700/50 shadow-xl mt-8">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {defects.filter(d => d.status === 'Open').length}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Open</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {defects.filter(d => d.status === 'In Progress').length}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">In Progress</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {defects.filter(d => d.priority === 'Critical').length}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Critical</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {defects.filter(d => d.status === 'Fixed').length}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Fixed</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

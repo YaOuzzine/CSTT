@@ -1,14 +1,14 @@
-// app/analytics/page.tsx
 'use client'
 
-import { Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../../components/ui/card"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { BarChart3, Bug, Scaling, Clock } from 'lucide-react'
+import { BarChart3, Bug, Scaling, Clock, Loader2 } from 'lucide-react'
 import { GradientBackground } from '../../../../../components/ui/gradient-background'
+import api from '../../../../../lib/api'
 
 // Types
-interface MetricType {
+interface Metric {
   id: string
   name: string
   value: string
@@ -17,7 +17,7 @@ interface MetricType {
   icon: keyof typeof METRIC_ICONS
 }
 
-interface TestResult {
+interface TestExecutionTrend {
   date: string
   passed: number
   failed: number
@@ -47,58 +47,8 @@ const CHART_COLORS = {
   low: '#22c55e'
 }
 
-// Mock Data
-const metrics: MetricType[] = [
-  {
-    id: '1',
-    name: 'Test Execution',
-    value: '2,847',
-    change: '+12.3%',
-    trend: 'up',
-    icon: 'execution'
-  },
-  {
-    id: '2',
-    name: 'Test Coverage',
-    value: '87.5%',
-    change: '+2.1%',
-    trend: 'up',
-    icon: 'coverage'
-  },
-  {
-    id: '3',
-    name: 'Active Defects',
-    value: '45',
-    change: '-5.3%',
-    trend: 'down',
-    icon: 'defects'
-  },
-  {
-    id: '4',
-    name: 'Avg Response Time',
-    value: '1.2s',
-    change: '-0.3s',
-    trend: 'down',
-    icon: 'performance'
-  }
-]
-
-const testResults: TestResult[] = Array.from({ length: 14 }, (_, i) => ({
-  date: `2024-03-${String(i + 1).padStart(2, '0')}`,
-  passed: Math.floor(Math.random() * 50) + 150,
-  failed: Math.floor(Math.random() * 20) + 5,
-  skipped: Math.floor(Math.random() * 10) + 2
-}))
-
-const defectData: DefectData[] = [
-  { name: 'Critical', value: 12 },
-  { name: 'High', value: 24 },
-  { name: 'Medium', value: 36 },
-  { name: 'Low', value: 28 }
-]
-
 // Components
-function MetricsCard({ metric }: { metric: MetricType }) {
+function MetricsCard({ metric }: { metric: Metric }) {
   const Icon = METRIC_ICONS[metric.icon]
   return (
     <Card>
@@ -124,7 +74,7 @@ function MetricsCard({ metric }: { metric: MetricType }) {
   )
 }
 
-function TestTrendChart() {
+function TestTrendChart({ data }: { data: TestExecutionTrend[] }) {
   return (
     <Card className="col-span-2">
       <CardHeader>
@@ -136,7 +86,7 @@ function TestTrendChart() {
       <CardContent>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={testResults}>
+            <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="date" />
               <YAxis />
@@ -170,7 +120,7 @@ function TestTrendChart() {
   )
 }
 
-function DefectDistributionChart() {
+function DefectDistributionChart({ data }: { data: DefectData[] }) {
   return (
     <Card>
       <CardHeader>
@@ -184,13 +134,13 @@ function DefectDistributionChart() {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={defectData}
+                data={data}
                 innerRadius={60}
                 outerRadius={80}
                 paddingAngle={5}
                 dataKey="value"
               >
-                {defectData.map((entry, index) => (
+                {data.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
                     fill={CHART_COLORS[entry.name.toLowerCase() as keyof typeof CHART_COLORS]} 
@@ -202,7 +152,7 @@ function DefectDistributionChart() {
           </ResponsiveContainer>
         </div>
         <div className="flex justify-center gap-4 mt-4">
-          {defectData.map((entry, index) => (
+          {data.map((entry, index) => (
             <div key={index} className="flex items-center gap-2">
               <div 
                 className="w-3 h-3 rounded-full"
@@ -219,7 +169,96 @@ function DefectDistributionChart() {
   )
 }
 
-export default function AnalyticsPage() {
+export default function AnalyticsPage({ params }: { params: { projectId: string } }) {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [analyticsData, setAnalyticsData] = useState<any>(null)
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true)
+        const response = await api.get(`/projects/${params.projectId}/analytics/`)
+        setAnalyticsData(response.data)
+      } catch (err) {
+        console.error('Failed to fetch analytics:', err)
+        setError('Failed to load analytics data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAnalytics()
+  }, [params.projectId])
+
+  // Prepare metrics for display
+  const prepareMetrics = (): Metric[] => {
+    if (!analyticsData) return []
+
+    const { test_execution, defects } = analyticsData
+    return [
+      {
+        id: '1',
+        name: 'Test Execution',
+        value: test_execution.total_executions.toString(),
+        change: `+${((test_execution.passed_executions / test_execution.total_executions * 100) || 0).toFixed(1)}%`,
+        trend: 'up',
+        icon: 'execution'
+      },
+      {
+        id: '2',
+        name: 'Test Coverage',
+        value: `${test_execution.test_coverage}%`,
+        change: '+2.1%',
+        trend: 'up',
+        icon: 'coverage'
+      },
+      {
+        id: '3',
+        name: 'Active Defects',
+        value: defects.open_defects.toString(),
+        change: `-${((defects.open_defects / defects.total_defects * 100) || 0).toFixed(1)}%`,
+        trend: 'down',
+        icon: 'defects'
+      },
+      {
+        id: '4',
+        name: 'Defect Res. Time',
+        value: analyticsData.defects.avg_resolution_time || 'N/A',
+        change: '-',
+        trend: 'down',
+        icon: 'performance'
+      }
+    ]
+  }
+
+  // Prepare defect distribution data
+  const prepareDefectData = (): DefectData[] => {
+    if (!analyticsData) return []
+
+    return analyticsData.defects.defect_distribution.map((item: any) => ({
+      name: item.severity.charAt(0).toUpperCase() + item.severity.slice(1),
+      value: item.count
+    }))
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+        <p className="ml-4 text-gray-600">Loading analytics...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">{error}</p>
+      </div>
+    )
+  }
+
   return (
     <div className="relative min-h-screen pb-8">
       <GradientBackground />
@@ -238,15 +277,29 @@ export default function AnalyticsPage() {
 
           {/* Metrics Grid */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {metrics.map(metric => (
+            {prepareMetrics().map(metric => (
               <MetricsCard key={metric.id} metric={metric} />
             ))}
           </div>
 
           {/* Charts Grid */}
           <div className="grid gap-6 md:grid-cols-3">
-            <TestTrendChart />
-            <DefectDistributionChart />
+            {analyticsData?.test_execution_trend && (
+              <TestTrendChart 
+                data={analyticsData.test_execution_trend.map((item: any) => ({
+                  date: new Date(item.date).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                  }),
+                  passed: item.passed,
+                  failed: item.failed,
+                  skipped: item.skipped
+                }))} 
+              />
+            )}
+            {analyticsData?.defects.defect_distribution && (
+              <DefectDistributionChart data={prepareDefectData()} />
+            )}
           </div>
         </div>
       </div>
